@@ -1,54 +1,39 @@
-const throttle = require('lodash.throttle');
+import throttle from 'lodash.throttle';
 
-const formRef = document.querySelector('.feedback-form');
-const inputRef = document.querySelector('input');
-const textareaRef = document.querySelector('textarea');
+const key = 'feedback-form-state';
+const feedBack = document.querySelector('.feedback-form');
+const mail = document.querySelector('input[name=email]');
+const message = document.querySelector('textarea[name=message]');
+const btn = document.querySelector('button[type=submit]');
 
+feedBack.addEventListener('input', throttle(onInput, 500));
 
-const STORAGE_KEY = "feedback-form-state";
-
-onSaveInput();
-
-
-formRef.addEventListener('input', onFormInput);
-formRef.addEventListener('submit', throttle(onFormSubmit, 500))
-
-
-function feedback (evt) {
-    const email = evt.currentTarget.elements.email.value;
-    const message = evt.currentTarget.elements.message.value;
+function onInput() {
+  const form = new FormData(feedBack);
+  let newForm = {};
+  form.forEach((value, name) => (newForm[name] = value));
+  localStorage.setItem(key, JSON.stringify(newForm));
 }
 
-function onFormInput (evt) {
-feedback();
-const formData = {
-    email,
-    message,
-};
-
-localStorage.setItem(STORAGE_KEY, JSON.stringify(formData))
-};
-
-
-function onFormSubmit (evt) {
-    evt.preventDefault();   
-    feedback();
-    const formData = {
-        email,
-        message,
-    };
-
-    console.log(formData)
-
-    evt.currentTarget.reset();
-    localStorage.removeItem(STORAGE_KEY);
+function saveInf() {
+  const newFormInf = JSON.parse(localStorage.getItem(key));
+  if (newFormInf) {
+    const inputDatas = Object.keys(newFormInf);
+    inputDatas.forEach(inputData => {
+      feedBack.elements[inputData].value = newFormInf[inputData];
+    });
+  }
 }
+saveInf();
 
-function onSaveInput (evt) {
-    const savedMessage = localStorage.getItem(STORAGE_KEY);
-const savedAllMessage = JSON.parse(savedMessage);
-    if (savedMessage) {
-        inputRef.value = savedAllMessage.email;
-        textareaRef.value = savedAllMessage.message;
-    }
+feedBack.addEventListener('submit', onSubmit);
+
+function onSubmit(evt) {
+  evt.preventDefault();
+  localStorage.removeItem(key);
+  let infData = {};
+  const formData = new FormData(feedBack);
+  formData.forEach((value, name) => (infData[name] = value));
+  console.log(infData);
+  feedBack.reset();
 }
